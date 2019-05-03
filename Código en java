@@ -1,0 +1,140 @@
+package com.example.borradorproyecto;
+
+import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.transition.TransitionManager;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class MainActivity extends AppCompatActivity {
+
+    TextView texto1;
+    TextView texto2;
+    Button boton1;
+    Button boton2;
+    RadioGroup selecciones_1;
+
+
+    Button select1_1;
+    Button select1_2;
+    Button select1_3;
+    Button select1_4;
+    Button select1_5;
+    Button select1_6;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        DownloadTask task = new DownloadTask();
+        task.execute("https://api.myjson.com/bins/k91ck");
+
+        boton1 = findViewById(R.id.confirm1);
+        boton2 = findViewById(R.id.confirm2);
+
+        texto1 = findViewById(R.id.texto_expl_1);
+        texto2 = findViewById(R.id.texto_expl_2);
+        selecciones_1 = findViewById(R.id.primr_seleccion);
+
+        boton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                texto1.animate().alpha(0f).setDuration(1000);
+                boton1.animate().alpha(0f).setDuration(1000);
+
+                texto2.animate().alpha(1f).setDuration(1000);
+                selecciones_1.animate().alpha(1f).setDuration(1000);
+                boton2.animate().alpha(1f).setDuration(1000);
+            }
+        });
+    }
+
+    public class DownloadTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... urls) {
+
+            String result = "";
+            URL url;
+            HttpURLConnection urlConnection = null;
+
+            try {
+                url = new URL(urls[0]);
+
+                urlConnection = (HttpURLConnection) url.openConnection();
+
+                InputStream in = urlConnection.getInputStream();
+
+                InputStreamReader reader = new InputStreamReader(in);
+
+                int data = reader.read();
+
+                while (data != -1){
+
+                    char current = (char) data;
+
+                    result += current;
+
+                    data = reader.read();
+
+                }
+
+                return result;
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result){
+            super.onPostExecute(result);
+
+            try {
+                JSONObject jsonObject = new JSONObject(result);
+
+                String infoLibros  = jsonObject.getString("libro");
+
+                Log.i("Nombre del Libro:", infoLibros);
+
+                JSONArray array = new JSONArray(infoLibros);
+
+                for (int i = 0; i < array.length(); ++i){
+
+                    JSONObject jsonPart = array.getJSONObject(i);
+
+                    Log.i("Duración del Libro: ", jsonPart.getString("duración del libro"));
+                    Log.i("Año de Publicación: ", jsonPart.getString("año de publicación"));
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+
+            }
+
+            Log.i("Contenido Libro:", result);
+
+        }
+    }
+}
